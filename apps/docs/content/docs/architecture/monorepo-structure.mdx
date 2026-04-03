@@ -5,11 +5,167 @@ description: 各パッケージの責務
 
 ## レイアウト
 
-| パス | 責務 |
-| --- | --- |
-| `apps/` | アプリケーション（デプロイ単位） |
-| `packages/` | 共有ライブラリ・設定 |
+```
+hp-memos/
+├── apps/
+│   ├── web/          … メインアプリケーション（TanStack Start）
+│   └── docs/         … ドキュメントサイト（Fumadocs / Next.js）
+├── packages/
+│   ├── db/           … DB スキーマ・接続・マイグレーション
+│   ├── ui/           … 共有 UI コンポーネント
+│   └── typescript-config/  … 共有 tsconfig
+├── turbo.json        … Turborepo タスク定義
+├── pnpm-workspace.yaml
+├── package.json      … ルートの devDependencies・スクリプト
+└── biome.json        … Biome (Lint + Format) 設定
+```
 
 ## パッケージ一覧
 
-（リポジトリに合わせて追記する。）
+### apps/
+
+| パッケージ | 説明 | デプロイ先 | 主要技術 |
+| --- | --- | --- | --- |
+| `apps/web` | メインの Web アプリケーション。記録入力・一覧・グラフ・認証を提供 | Vercel | TanStack Start, Hono, React 19 |
+| `apps/docs` | プロジェクトのドキュメントサイト。設計書・ADR・規約を管理 | Vercel | Fumadocs, Next.js |
+
+### packages/
+
+| パッケージ | 説明 | 依存元 |
+| --- | --- | --- |
+| `packages/db` | DB スキーマ定義・接続・マイグレーション（Drizzle ORM） | `apps/web` |
+| `packages/ui` | 共有 UI コンポーネント（ボタン・カードなど） | `apps/web` |
+| `packages/typescript-config` | 共有の `tsconfig.json` プリセット | 全パッケージ |
+
+## packages/db の内部構成
+
+```
+packages/db/
+├── src/
+│   ├── index.ts          … DB 接続 & 全エクスポート
+│   ├── client.ts         … Drizzle クライアント生成
+│   └── schema/
+│       ├── index.ts      … 全スキーマの re-export
+│       ├── users.ts      … users テーブル
+│       ├── sessions.ts   … sessions テーブル
+│       ├── records.ts    … records テーブル
+│       └── credentials.ts … WebAuthn credentials テーブル
+├── drizzle/              … マイグレーションファイル（自動生成）
+├── drizzle.config.ts     … Drizzle Kit 設定
+├── package.json
+└── tsconfig.json
+```
+
+スキーマはテーブルごとにファイルを分割し、`schema/index.ts` で re-export する。
+
+```ts
+// schema/users.ts
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+export const users = pgTable("users", {
+  id: text("id").primaryKey(),
+  // ...
+});
+```
+
+```ts
+// schema/index.ts
+export * from "./users";
+export * from "./sessions";
+export * from "./records";
+export * from "./credentials";
+```
+
+`apps/web` からは `@repo/db` として利用する。
+
+```ts
+import { db } from "@repo/db";
+import { users, records } from "@repo/db/schema";
+```
+
+## apps/web の内部構成
+
+```
+apps/web/src/
+├── routes/           … ページコンポーネント（ファイルベースルーティング）
+│   ├── __root.tsx    … ルートレイアウト
+│   ├── index.tsx     … トップページ
+│   └── about.tsx
+├── components/       … UI コンポーネント
+│   ├── Header.tsx
+│   ├── Footer.tsx
+│   └── ThemeToggle.tsx
+├── lib/              … ユーティリティ
+│   └── utils.ts
+├── router.tsx        … ルーター設定
+├── routeTree.gen.ts  … 自動生成されたルートツリー
+└── styles.css        … グローバルスタイル
+```
+
+### 今後追加予定のディレクトリ
+
+```
+apps/web/src/
+├── routes/
+│   ├── _authed/              … 認証必須レイアウトグループ
+│   │   ├── dashboard.tsx     … ダッシュボード（一覧）
+│   │   ├── records/
+│   │   │   ├── new.tsx       … 記録入力
+│   │   │   └── $recordId.tsx … 記録編集
+│   │   ├── graph.tsx         … 推移グラフ
+│   │   └── settings.tsx      … 設定
+│   ├── login.tsx             … ログイン
+│   └── register.tsx          … アカウント登録
+├── components/
+│   ├── ui/                   … 汎用 UI（Button, Slider, Card ...）
+│   └── features/             … ドメイン固有（RecordForm, GraphChart ...）
+├── lib/
+│   ├── api.ts                … Hono API クライアント
+│   ├── auth.ts               … 認証ユーティリティ
+│   └── validators.ts         … Zod スキーマ
+├── server/
+│   ├── api/                  … Hono ルートハンドラ
+│   │   ├── index.ts          … Hono アプリ定義・ルートマウント
+│   │   ├── records.ts        … 記録 CRUD
+│   │   └── auth.ts           … 認証エンドポイント
+│   └── middleware/
+│       ├── auth.ts           … 認証ミドルウェア
+│       └── validation.ts     … バリデーションミドルウェア
+└── types/                    … 共有型定義
+    └── index.ts
+```
+
+## 依存関係グラフ
+
+```mermaid
+flowchart TD
+  web["apps/web"]
+  docs["apps/docs"]
+  db["packages/db"]
+  ui["packages/ui"]
+  tsconfig["packages/typescript-config"]
+
+  web --> db
+  web --> ui
+  web --> tsconfig
+  db --> tsconfig
+  docs --> tsconfig
+  ui --> tsconfig
+```
+
+## Turborepo タスク
+
+| タスク | コマンド | 説明 |
+| --- | --- | --- |
+| `build` | `turbo run build` | 全パッケージのビルド（依存順） |
+| `dev` | `turbo run dev` | 全アプリの開発サーバー起動 |
+| `dev:web` | `turbo run dev --filter=web` | Web アプリのみ開発サーバー起動 |
+| `dev:docs` | `turbo run dev --filter=docs` | ドキュメントサイトのみ起動 |
+| `lint` | `turbo run lint` | 全パッケージの Lint 実行 |
+| `check-types` | `turbo run check-types` | 全パッケージの型チェック |
+
+## パッケージ追加の方針
+
+- **共有ロジック**: `packages/` に新パッケージとして切り出す
+- **アプリ固有ロジック**: 各 `apps/` 内に閉じる
+- **packages に切り出す基準**: 2つ以上の apps から参照される、またはテスト・再利用の単位として独立させたい場合

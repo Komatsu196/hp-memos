@@ -1,0 +1,74 @@
+---
+title: Recharts + shadcn/ui
+description: 採用したグラフ表示ライブラリ
+---
+
+## 概要
+
+`Recharts` は React 向けの定番チャートライブラリで、`shadcn/ui` の chart も Recharts をベースにしている。
+
+参考:
+
+- [Recharts 公式](https://recharts.org/)
+- [shadcn/ui Chart](https://ui.shadcn.com/docs/components/chart)
+
+## このプロジェクトとの相性
+
+相性はかなり良い。
+
+理由:
+
+- `shadcn/ui` 方針と自然に接続できる
+- 折れ線グラフの実装がシンプル
+- 体力 / 気力の 2 系列グラフに十分
+- カード、タブ、セレクトなど既存 UI と合わせやすい
+- MVP 時点で必要な表現に対して過不足が少ない
+
+## 想定実装イメージ
+
+```tsx
+<ChartContainer config={chartConfig}>
+  <LineChart data={data}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="date" />
+    <YAxis domain={[0, 5]} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Line dataKey="physical" />
+    <Line dataKey="mental" />
+  </LineChart>
+</ChartContainer>
+```
+
+## メリット
+
+- 実装コストが低い
+- JSX ベースで理解しやすい
+- `shadcn/ui` のサンプルを流用しやすい
+- Tailwind / CSS 変数でテーマを合わせやすい
+- 折れ線、棒、面など基本的なチャートは十分に揃う
+
+## 注意点
+
+- データ量が極端に増えると重くなりやすい
+- 高度な分析ダッシュボード用途では表現力に限界がある
+- 細かい描画制御は ECharts や visx より弱い
+
+## このプロダクトでの向き不向き
+
+向いている:
+
+- MVP の推移グラフ
+- 7日 / 14日 / 30日の期間切替
+- 体力 / 気力の 2 系列比較
+- コメント付きの軽いツールチップ表示
+
+あまり向いていない:
+
+- 大量データの高頻度レンダリング
+- 高度なズーム、ブラッシング、分析機能
+
+## 総評
+
+推移グラフ表示の採用ライブラリとして選定した。
+
+特に、`shadcn/ui` を使う方針がすでにあるため、UI の統一感と実装速度を両立しやすい点が大きい。

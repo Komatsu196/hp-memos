@@ -5,20 +5,96 @@ description: 技術選定と採用理由
 
 ## フロントエンド
 
-| 技術 | 採用理由 |
-| --- | --- |
-| | |
+| 技術 | バージョン | 採用理由 |
+| --- | --- | --- |
+| TanStack Start | latest | フルスタック React フレームワーク。SSR・Server Functions・ファイルベースルーティングを統合 |
+| React | 19.x | Server Components 対応。エコシステムの成熟度が高い |
+| TanStack Router | latest | 型安全なルーティング。loader / action による宣言的データフェッチ |
+| shadcn/ui | latest | Radix UI + Tailwind CSS ベースの高品質コンポーネント集。コピー&ペースト方式で完全にカスタマイズ可能 |
+| Recharts | latest | 推移グラフ表示に採用。`shadcn/ui` の chart と相性が良く、折れ線グラフを素直に実装できる |
+| Tailwind CSS | 4.x | ユーティリティファーストで高速な UI 開発。v4 で CSS-first 設定に対応 |
+| CVA (class-variance-authority) | 0.7.x | コンポーネントのバリアント管理を型安全に行う。shadcn/ui が内部で使用 |
+| Lucide React | latest | 軽量なアイコンライブラリ。Tree-shaking 対応 |
+| Vite | 7.x | 高速な HMR とビルド。TanStack Start のバンドラとして使用 |
 
 ## バックエンド
 
+| 技術 | バージョン | 採用理由 |
+| --- | --- | --- |
+| Hono | (導入予定) | 軽量・高速な Web フレームワーク。Middleware が豊富で Serverless・Node.js どちらでも動作する |
+| Drizzle ORM | (導入予定) | TypeScript ファーストの ORM。SQL に近い記法でクエリを記述でき、マイグレーション機能を内蔵 |
+| Zod | (導入予定) | スキーマバリデーション。API の入力検証と型推論を同時に実現 |
+
+### 認証関連（導入予定）
+
 | 技術 | 採用理由 |
 | --- | --- |
-| | |
+| @simplewebauthn/server | WebAuthn のサーバーサイド処理（パスキー登録・認証検証） |
+| @simplewebauthn/browser | WebAuthn のブラウザサイド処理（パスキー登録・認証リクエスト） |
+| bcrypt or argon2 | パスワードのハッシュ化 |
 
-## インフラ・ツール
+## インフラ・ホスティング
+
+デプロイ先は 2 パターンを想定している。詳細は[システム全体図](/docs/architecture/system-overview)を参照。
+
+### パターン A: Vercel（マネージド）
 
 | 技術 | 採用理由 |
 | --- | --- |
-| | |
+| Vercel | TanStack Start のホスティングに最適化。Git push で自動デプロイ |
+| Supabase / Neon | マネージド PostgreSQL。Free Tier で個人開発に十分。自動バックアップ付き |
+
+### パターン B: 自前サーバー
+
+| 技術 | 採用理由 |
+| --- | --- |
+| VPS (Hetzner 等) | コスト管理しやすく、構成の自由度が高い |
+| Docker / Docker Compose | アプリ・DB をコンテナで一括管理。再現性のある環境構築 |
+| Caddy | 自動 TLS・リバースプロキシ。設定がシンプル |
+| PostgreSQL (セルフホスト) | VPS 上で直接 or Docker で稼働。マネージド DB との併用も可 |
+
+## ツール
+
+| 技術 | 採用理由 |
+| --- | --- |
+| Turborepo | 高速なモノレポビルドシステム。キャッシュによる差分ビルド |
+| pnpm | 高速なパッケージマネージャ。ディスク効率の良い node_modules 管理 |
+| Biome | Lint + Format を統合。ESLint + Prettier の代替として高速に動作 |
+| TypeScript | 5.9.x。strict モード必須。フロントエンド・バックエンドで言語を統一 |
+| mise | Node.js・pnpm 等のランタイムバージョン管理 |
+| Vitest | Vite ネイティブのテストランナー。Jest 互換 API で移行コストが低い |
+
+## 技術選定の方針
+
+### 原則
+
+1. **TypeScript 統一**: フロント・バックエンド・インフラ設定まで TypeScript で統一し、型安全性を最大化
+2. **軽量・高速**: 個人開発かつ Free Tier 運用のため、バンドルサイズとランタイムコストを最小化
+3. **エコシステム整合性**: TanStack ファミリー（Router / Start / Query）を中心に据え、ツール間の統合を活用
+4. **運用コスト最小**: マネージドサービスを活用し、インフラ管理の負荷をゼロに近づける
+
+### TanStack Start を選んだ理由
+
+| 比較項目 | TanStack Start | Next.js | Remix |
+| --- | --- | --- | --- |
+| ルーティング型安全性 | ◎ (TanStack Router) | △ (型推論が弱い) | ○ |
+| SSR + API 統合 | ○ (Hono マウント) | ◎ (API Routes) | ○ (loader/action) |
+| バンドラ | Vite | Webpack / Turbopack | Vite |
+| React 19 対応 | ○ | ○ | ○ |
+| 学習コスト | △ (新しい) | ◎ (情報が豊富) | ○ |
+
+→ **型安全なルーティング**と**Vite ベースの高速な開発体験**を最優先し、TanStack Start を採用。
+
+### Hono を選んだ理由
+
+| 比較項目 | Hono | Express | Fastify |
+| --- | --- | --- | --- |
+| TypeScript 対応 | ◎ (ネイティブ) | △ (型定義が別) | ○ |
+| パフォーマンス | ◎ | △ | ◎ |
+| バンドルサイズ | ◎ (軽量) | ○ | △ |
+| Edge / Serverless | ◎ (マルチランタイム) | △ | △ |
+| Middleware エコシステム | ○ | ◎ | ○ |
+
+→ **軽量・型安全・Serverless 最適化**の観点で Hono を採用。TanStack Start の API ルートにマウントして使用。
 
 詳細な意思決定は [ADR](/docs/decisions/001-monorepo-tool) に記録する。
