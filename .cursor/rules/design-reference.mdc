@@ -1,0 +1,26 @@
+---
+description: 実装時に参照する設計ドキュメントの場所
+alwaysApply: true
+---
+
+# 実装時の設計参照
+
+実装や修正を行う前に、関連する設計ドキュメントを `apps/docs/content/docs/` 配下から確認する。
+
+## 主なディレクトリ
+
+- `apps/docs/content/docs/design/` — 設計（API・DB・UI コンポーネント等）
+  - `design/api/` — API 設計
+  - `design/db/` — DB 設計
+  - `design/ui-components.mdx` — UI コンポーネント設計
+- `apps/docs/content/docs/architecture/` — アーキテクチャ
+- `apps/docs/content/docs/decisions/` — 意思決定記録（ADR）
+- `apps/docs/content/docs/requirements/` — 要件
+- `apps/docs/content/docs/rules/` — プロジェクトルール
+- `apps/docs/content/docs/research/` — 調査メモ
+
+## 使い方
+
+- 新機能・修正対象に関連するドキュメントを、`apps/docs/content/docs/` 配下から先に探す。
+- 実装前に該当する設計（API スキーマ、DB スキーマ、UI 仕様など）を必ず確認する。
+- 設計と実装に齟齬がある場合は、どちらを正とするかをユーザーに確認する。
