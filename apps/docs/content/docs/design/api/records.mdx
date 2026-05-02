@@ -1,0 +1,302 @@
+---
+title: 記録 API
+description: コンディション記録の CRUD
+---
+
+## `GET /api/records`
+
+ログインユーザーの記録一覧を取得する。自分の記録のみ返却される。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### クエリパラメータ
+
+| パラメータ | 型 | デフォルト | 説明 |
+| --- | --- | --- | --- |
+| `limit` | `number` | `20` | 取得件数（1〜100） |
+| `offset` | `number` | `0` | スキップ件数 |
+| `from` | `string` | — | 開始日（`YYYY-MM-DD`、inclusive） |
+| `to` | `string` | — | 終了日（`YYYY-MM-DD`、inclusive） |
+
+### Zod スキーマ
+
+```ts
+export const recordsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+  from: z.string().date().optional(),
+  to: z.string().date().optional(),
+});
+```
+
+### レスポンス: 200 OK
+
+```json
+{
+  "data": [
+    {
+      "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "date": "2025-04-03",
+      "physical": 70,
+      "mental": 80,
+      "comment": "今日は調子が良い",
+      "createdAt": "2025-04-03T08:00:00.000Z",
+      "updatedAt": "2025-04-03T08:00:00.000Z"
+    }
+  ],
+  "meta": {
+    "total": 150,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+### 用途別クエリ例
+
+| 用途 | クエリ |
+| --- | --- |
+| 一覧（最新 20 件） | `GET /api/records` |
+| 一覧（次の 20 件） | `GET /api/records?offset=20` |
+| グラフ（直近 7 日） | `GET /api/records?from=2025-03-28&to=2025-04-03&limit=100` |
+| グラフ（直近 30 日） | `GET /api/records?from=2025-03-05&to=2025-04-03&limit=100` |
+
+---
+
+## `POST /api/records`
+
+新しいコンディション記録を作成する。日付は自動で当日を付与する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### リクエストボディ
+
+```json
+{
+  "physical": 3.5,
+  "mental": 4.0,
+  "comment": "今日は調子が良い"
+}
+```
+
+| フィールド | 型 | 必須 | バリデーション |
+| --- | --- | --- | --- |
+| `physical` | `number` | Yes | 0〜100 の整数 |
+| `mental` | `number` | Yes | 0〜100 の整数 |
+| `comment` | `string` | No | 最大 200 文字 |
+
+### Zod スキーマ
+
+```ts
+const scoreSchema = z
+  .number()
+  .int()
+  .min(0)
+  .max(100);
+
+export const createRecordSchema = z.object({
+  physical: scoreSchema,
+  mental: scoreSchema,
+  comment: z.string().max(200).optional(),
+});
+```
+
+### レスポンス: 201 Created
+
+```json
+{
+  "data": {
+    "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "date": "2025-04-03",
+    "physical": 3.5,
+    "mental": 4.0,
+    "comment": "今日は調子が良い",
+    "createdAt": "2025-04-03T08:00:00.000Z",
+    "updatedAt": "2025-04-03T08:00:00.000Z"
+  }
+}
+```
+
+### エラー
+
+| ステータス | コード | 条件 |
+| --- | --- | --- |
+| 400 | `VALIDATION_ERROR` | 入力値不正 |
+| 409 | `CONFLICT` | 今日の記録が既に存在する |
+
+---
+
+## `GET /api/records/:id`
+
+指定 ID の記録を取得する。所有者チェックを行う。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### レスポンス: 200 OK
+
+```json
+{
+  "data": {
+    "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "date": "2025-04-03",
+    "physical": 70,
+    "mental": 80,
+    "comment": "今日は調子が良い",
+    "createdAt": "2025-04-03T08:00:00.000Z",
+    "updatedAt": "2025-04-03T08:00:00.000Z"
+  }
+}
+```
+
+### エラー
+
+| ステータス | コード | 条件 |
+| --- | --- | --- |
+| 404 | `NOT_FOUND` | 記録が存在しない |
+| 403 | `FORBIDDEN` | 他ユーザーの記録にアクセス |
+
+---
+
+## `PATCH /api/records/:id`
+
+記録を部分更新する。送信されたフィールドのみ更新される。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### リクエストボディ
+
+```json
+{
+  "physical": 4.0,
+  "comment": "修正：実は調子が良かった"
+}
+```
+
+| フィールド | 型 | 必須 | バリデーション |
+| --- | --- | --- | --- |
+| `physical` | `number` | No | 0〜100 の整数 |
+| `mental` | `number` | No | 0〜100 の整数 |
+| `comment` | `string \| null` | No | 最大 200 文字（`null` でクリア） |
+
+### Zod スキーマ
+
+```ts
+export const updateRecordSchema = z.object({
+  physical: scoreSchema.optional(),
+  mental: scoreSchema.optional(),
+  comment: z.string().max(200).nullable().optional(),
+});
+```
+
+### レスポンス: 200 OK
+
+```json
+{
+  "data": {
+    "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "date": "2025-04-03",
+    "physical": 80,
+    "mental": 80,
+    "comment": "修正：実は調子が良かった",
+    "createdAt": "2025-04-03T08:00:00.000Z",
+    "updatedAt": "2025-04-03T08:30:00.000Z"
+  }
+}
+```
+
+### エラー
+
+| ステータス | コード | 条件 |
+| --- | --- | --- |
+| 400 | `VALIDATION_ERROR` | 入力値不正 |
+| 403 | `FORBIDDEN` | 他ユーザーの記録を更新 |
+| 404 | `NOT_FOUND` | 記録が存在しない |
+
+---
+
+## `DELETE /api/records/:id`
+
+記録を削除する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### レスポンス: 204 No Content
+
+（レスポンスボディなし）
+
+### エラー
+
+| ステータス | コード | 条件 |
+| --- | --- | --- |
+| 403 | `FORBIDDEN` | 他ユーザーの記録を削除 |
+| 404 | `NOT_FOUND` | 記録が存在しない |
+
+---
+
+## MVP v2 での変更
+
+v2 で朝・夜の記録区別を導入する際の変更点。
+
+### `POST /api/records` の変更
+
+リクエストボディに `timeOfDay` を追加。
+
+```json
+{
+  "physical": 70,
+  "mental": 80,
+  "comment": "朝の記録",
+  "timeOfDay": "morning"
+}
+```
+
+| フィールド | 型 | 必須 | バリデーション |
+| --- | --- | --- | --- |
+| `timeOfDay` | `string` | No | `'morning'` / `'evening'`（省略時は時刻から自動判定） |
+
+### `GET /api/records` のレスポンス変更
+
+各記録に `timeOfDay` フィールドが追加される。
+
+```json
+{
+  "data": [
+    {
+      "id": "...",
+      "date": "2025-04-03",
+      "timeOfDay": "morning",
+      "physical": 70,
+      "mental": 80,
+      "comment": null,
+      "createdAt": "...",
+      "updatedAt": "..."
+    },
+    {
+      "id": "...",
+      "date": "2025-04-03",
+      "timeOfDay": "evening",
+      "physical": 40,
+      "mental": 60,
+      "comment": "疲れた",
+      "createdAt": "...",
+      "updatedAt": "..."
+    }
+  ],
+  "meta": { "total": 2, "limit": 20, "offset": 0 }
+}
+```
+
+### 重複チェックの変更
+
+- v1: 同日に 1 件のみ（`CONFLICT` エラー）
+- v2: 同日・同タイミングに 1 件のみ（朝 1 件 + 夜 1 件は許可）

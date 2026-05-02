@@ -1,0 +1,175 @@
+---
+title: 認証 API
+description: アカウント登録・ログイン・ログアウト・ユーザー情報取得
+---
+
+## `POST /api/auth/register`
+
+新規アカウントを作成し、セッションを発行する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 不要 |
+
+### リクエストボディ
+
+```json
+{
+  "loginId": "testuser",
+  "password": "MyP@ssw0rd!"
+}
+```
+
+| フィールド | 型 | 必須 | バリデーション |
+| --- | --- | --- | --- |
+| `loginId` | `string` | Yes | 英数字・アンダースコア、4〜32 文字 |
+| `password` | `string` | Yes | 8 文字以上、英大小文字・数字・記号を各 1 つ以上含む |
+
+### Zod スキーマ
+
+```ts
+import { z } from "zod";
+
+export const registerSchema = z.object({
+  loginId: z
+    .string()
+    .min(4)
+    .max(32)
+    .regex(/^[a-zA-Z0-9_]+$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(/[a-z]/, "小文字を含めてください")
+    .regex(/[A-Z]/, "大文字を含めてください")
+    .regex(/[0-9]/, "数字を含めてください")
+    .regex(/[^a-zA-Z0-9]/, "記号を含めてください"),
+});
+```
+
+### レスポンス: 201 Created
+
+```json
+{
+  "user": {
+    "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "loginId": "testuser",
+    "createdAt": "2025-04-03T12:00:00.000Z"
+  }
+}
+```
+
+Set-Cookie: `session=<token>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`
+
+### エラー
+
+| ステータス | コード | 条件 |
+| --- | --- | --- |
+| 400 | `VALIDATION_ERROR` | 入力値不正 |
+| 409 | `CONFLICT` | `loginId` が既に使用されている |
+
+---
+
+## `POST /api/auth/login`
+
+パスワード認証でログインする。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 不要 |
+
+### リクエストボディ
+
+```json
+{
+  "loginId": "testuser",
+  "password": "MyP@ssw0rd!"
+}
+```
+
+| フィールド | 型 | 必須 | バリデーション |
+| --- | --- | --- | --- |
+| `loginId` | `string` | Yes | 空でないこと |
+| `password` | `string` | Yes | 空でないこと |
+
+### Zod スキーマ
+
+```ts
+export const loginSchema = z.object({
+  loginId: z.string().min(1),
+  password: z.string().min(1),
+});
+```
+
+### レスポンス: 200 OK
+
+```json
+{
+  "user": {
+    "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "loginId": "testuser",
+    "createdAt": "2025-04-03T12:00:00.000Z"
+  }
+}
+```
+
+Set-Cookie: `session=<token>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`
+
+### エラー
+
+| ステータス | コード | 条件 |
+| --- | --- | --- |
+| 401 | `UNAUTHORIZED` | ユーザー ID またはパスワードが不正 |
+| 429 | `RATE_LIMITED` | ログイン試行回数超過（5 回失敗で 15 分ロック） |
+
+### セキュリティ
+
+- 「ユーザーが存在しない」と「パスワードが違う」を区別しない（タイミング攻撃対策）
+- ログイン失敗回数をユーザー単位でカウントし、5 回で一時ロック
+
+---
+
+## `POST /api/auth/logout`
+
+セッションを破棄する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### レスポンス: 200 OK
+
+```json
+{
+  "message": "ログアウトしました"
+}
+```
+
+Set-Cookie: `session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`
+
+---
+
+## `GET /api/auth/me`
+
+現在ログイン中のユーザー情報を返す。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### レスポンス: 200 OK
+
+```json
+{
+  "user": {
+    "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "loginId": "testuser",
+    "createdAt": "2025-04-03T12:00:00.000Z"
+  }
+}
+```
+
+### エラー
+
+| ステータス | コード | 条件 |
+| --- | --- | --- |
+| 401 | `UNAUTHORIZED` | セッションなし or 期限切れ |

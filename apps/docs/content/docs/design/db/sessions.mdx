@@ -1,0 +1,53 @@
+---
+title: sessions テーブル
+description: サーバーサイドセッション管理
+---
+
+サーバーサイドセッションを管理する。セッショントークンは暗号学的ランダム値で生成する。
+
+## カラム定義
+
+| カラム | 型 | 制約 | 説明 |
+| --- | --- | --- | --- |
+| `id` | `text` | PK | `crypto.randomBytes(32)` の hex 表現 |
+| `user_id` | `text` | FK → `users.id`, NOT NULL | セッション所有者 |
+| `expires_at` | `timestamptz` | NOT NULL | 有効期限（デフォルト 30 日後） |
+| `created_at` | `timestamptz` | NOT NULL, DEFAULT `now()` | 作成日時 |
+
+## 外部キー
+
+| カラム | 参照先 | ON DELETE |
+| --- | --- | --- |
+| `user_id` | `users.id` | CASCADE |
+
+## インデックス
+
+| 名前 | カラム | 用途 |
+| --- | --- | --- |
+| `idx_sessions_user_id` | `user_id` | ユーザーのセッション一覧取得 |
+| `idx_sessions_expires_at` | `expires_at` | 期限切れセッションの定期削除 |
+
+## Drizzle スキーマ
+
+```ts
+import { pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
+import { users } from "./users";
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_sessions_user_id").on(table.userId),
+    index("idx_sessions_expires_at").on(table.expiresAt),
+  ],
+);
+```

@@ -1,0 +1,21 @@
+---
+title: ヘルスチェック API
+description: GET /api/health
+---
+
+## `GET /api/health`
+
+サーバーとデータベースの稼働状態を確認する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 不要 |
+
+### レスポンス: 200 OK
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-04-03T12:00:00.000Z"
+}
+```

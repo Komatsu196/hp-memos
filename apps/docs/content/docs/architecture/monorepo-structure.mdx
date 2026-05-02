@@ -104,6 +104,8 @@ apps/web/src/
 
 ### 今後追加予定のディレクトリ
 
+API は[クリーンアーキテクチャ](/docs/architecture/api-architecture)に基づいた構成とする。
+
 ```
 apps/web/src/
 ├── routes/
@@ -120,19 +122,97 @@ apps/web/src/
 │   ├── ui/                   … 汎用 UI（Button, Slider, Card ...）
 │   └── features/             … ドメイン固有（RecordForm, GraphChart ...）
 ├── lib/
-│   ├── api.ts                … Hono API クライアント
+│   ├── api.ts                … Hono API クライアント（hc 型推論）
 │   ├── auth.ts               … 認証ユーティリティ
-│   └── validators.ts         … Zod スキーマ
-├── server/
-│   ├── api/                  … Hono ルートハンドラ
-│   │   ├── index.ts          … Hono アプリ定義・ルートマウント
-│   │   ├── records.ts        … 記録 CRUD
-│   │   └── auth.ts           … 認証エンドポイント
-│   └── middleware/
-│       ├── auth.ts           … 認証ミドルウェア
-│       └── validation.ts     … バリデーションミドルウェア
-└── types/                    … 共有型定義
+│   └── validators.ts         … Zod スキーマ（クライアント・サーバー共有）
+├── server/                              … クリーンアーキテクチャ（操作単位の垂直スライス）
+│   ├── features/                        … エンドポイントごとの機能モジュール
+│   │   ├── auth/
+│   │   │   ├── shared/
+│   │   │   │   └── entities.ts          … User, Session, Credential 型
+│   │   │   ├── register/               … 操作ごとにディレクトリ分離
+│   │   │   │   ├── repository.ts        … この操作専用の Repository Interface
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   ├── login/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   ├── logout/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   ├── me/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   └── route.ts                … Hono ルートハンドラ
+│   │   ├── records/
+│   │   │   ├── shared/
+│   │   │   │   └── entities.ts          … Record 型
+│   │   │   ├── create/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   ├── list/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   ├── get/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   ├── update/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   ├── delete/
+│   │   │   │   ├── repository.ts
+│   │   │   │   ├── use-case.ts
+│   │   │   │   └── infrastructure.ts
+│   │   │   └── route.ts
+│   │   └── health/
+│   │       └── route.ts
+│   ├── shared/                          … 複数 feature で共有する横断的関心事
+│   │   ├── errors.ts                    … 共通ドメインエラー
+│   │   └── middleware/
+│   │       ├── auth.ts                  … 認証ミドルウェア
+│   │       └── error-handler.ts         … DomainError → HTTP レスポンス変換
+│   ├── app.ts                           … Hono アプリ定義・全 feature ルートマウント
+│   └── container.ts                     … DI コンテナ（操作ごとの Repository をワイヤリング）
+└── types/                               … 共有型定義
     └── index.ts
+```
+
+`server/` 配下の依存関係（操作単位）:
+
+```mermaid
+flowchart TD
+  subgraph feature["features/records/"]
+    Route["route.ts"]
+    subgraph ops["操作ごとのディレクトリ"]
+      Create["create/\nrepository / use-case / infrastructure"]
+      List["list/\nrepository / use-case / infrastructure"]
+      Get["get/\nrepository / use-case / infrastructure"]
+    end
+    SharedE["shared/entities.ts"]
+  end
+
+  Shared["shared/\n(共通エラー・MW)"]
+  DI["container.ts"]
+  DB["packages/db\n(@repo/db)"]
+
+  Route --> Create
+  Route --> List
+  Route --> Get
+  Create --> SharedE
+  Create --> Shared
+  List --> SharedE
+  Get --> SharedE
+  DI -.->|注入| Create
+  DI -.->|注入| List
+  DI -.->|注入| Get
+  Create -.->|infrastructure のみ| DB
 ```
 
 ## 依存関係グラフ

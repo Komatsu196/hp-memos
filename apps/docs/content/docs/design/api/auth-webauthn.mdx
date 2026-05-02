@@ -1,0 +1,124 @@
+---
+title: WebAuthn API
+description: パスキーの登録・認証
+---
+
+## `POST /api/auth/webauthn/register/options`
+
+パスキー登録用のオプション（チャレンジ）を生成する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### レスポンス: 200 OK
+
+```json
+{
+  "options": {
+    "challenge": "base64url-encoded-challenge",
+    "rp": {
+      "name": "hp-memos",
+      "id": "example.com"
+    },
+    "user": {
+      "id": "base64url-encoded-user-id",
+      "name": "testuser",
+      "displayName": "testuser"
+    },
+    "pubKeyCredParams": [
+      { "alg": -7, "type": "public-key" },
+      { "alg": -257, "type": "public-key" }
+    ],
+    "authenticatorSelection": {
+      "residentKey": "preferred",
+      "userVerification": "preferred"
+    },
+    "attestation": "none",
+    "excludeCredentials": []
+  }
+}
+```
+
+---
+
+## `POST /api/auth/webauthn/register/verify`
+
+パスキー登録のレスポンスを検証し、資格情報を保存する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 必要 |
+
+### リクエストボディ
+
+`@simplewebauthn/browser` の `startRegistration()` が返す `RegistrationResponseJSON`
+
+### レスポンス: 201 Created
+
+```json
+{
+  "message": "パスキーを登録しました"
+}
+```
+
+---
+
+## `POST /api/auth/webauthn/login/options`
+
+パスキー認証用のオプション（チャレンジ）を生成する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 不要 |
+
+### リクエストボディ
+
+```json
+{
+  "loginId": "testuser"
+}
+```
+
+`loginId` は任意。省略時は discoverable credentials（Passkey）による認証。
+
+### レスポンス: 200 OK
+
+```json
+{
+  "options": {
+    "challenge": "base64url-encoded-challenge",
+    "rpId": "example.com",
+    "allowCredentials": [],
+    "userVerification": "preferred"
+  }
+}
+```
+
+---
+
+## `POST /api/auth/webauthn/login/verify`
+
+パスキー認証のレスポンスを検証し、セッションを発行する。
+
+| 項目 | 値 |
+| --- | --- |
+| 認証 | 不要 |
+
+### リクエストボディ
+
+`@simplewebauthn/browser` の `startAuthentication()` が返す `AuthenticationResponseJSON`
+
+### レスポンス: 200 OK
+
+```json
+{
+  "user": {
+    "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "loginId": "testuser",
+    "createdAt": "2025-04-03T12:00:00.000Z"
+  }
+}
+```
+
+Set-Cookie: `session=<token>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`
