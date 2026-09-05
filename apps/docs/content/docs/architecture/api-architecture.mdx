@@ -450,8 +450,8 @@ import type { AppEnv } from "../../app";
 const createRecordSchema = z.object({
   date: z.string().date(),
   timeOfDay: z.enum(["morning", "night"]),
-  physical: z.number().min(0).max(5),
-  mental: z.number().min(0).max(5),
+  physical: z.number().min(0).max(5).multipleOf(0.5),
+  mental: z.number().min(0).max(5).multipleOf(0.5),
   comment: z.string().max(200).nullable(),
 });
 

@@ -30,8 +30,8 @@ erDiagram
     text id PK "CUID2"
     text user_id FK
     date date "記録日"
-    integer physical "0 - 100"
-    integer mental "0 - 100"
+    numeric physical "0 - 5 / 0.5 刻み"
+    numeric mental "0 - 5 / 0.5 刻み"
     varchar comment "最大200文字"
     timestamptz created_at
     timestamptz updated_at
@@ -117,8 +117,8 @@ async function seed() {
     await db.insert(records).values({
       userId,
       date: date.toISOString().split("T")[0],
-      physical: Math.floor(Math.random() * 101),
-      mental: Math.floor(Math.random() * 101),
+      physical: Math.round(Math.random() * 10) / 2,
+      mental: Math.round(Math.random() * 10) / 2,
       comment: i === 0 ? "今日は調子が良い" : null,
     });
   }
