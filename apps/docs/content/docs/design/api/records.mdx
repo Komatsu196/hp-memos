@@ -39,8 +39,8 @@ export const recordsQuerySchema = z.object({
     {
       "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
       "date": "2025-04-03",
-      "physical": 70,
-      "mental": 80,
+      "physical": 3.5,
+      "mental": 4,
       "comment": "今日は調子が良い",
       "createdAt": "2025-04-03T08:00:00.000Z",
       "updatedAt": "2025-04-03T08:00:00.000Z"
@@ -78,25 +78,26 @@ export const recordsQuerySchema = z.object({
 ```json
 {
   "physical": 3.5,
-  "mental": 4.0,
+  "mental": 4,
   "comment": "今日は調子が良い"
 }
 ```
 
 | フィールド | 型 | 必須 | バリデーション |
 | --- | --- | --- | --- |
-| `physical` | `number` | Yes | 0〜100 の整数 |
-| `mental` | `number` | Yes | 0〜100 の整数 |
+| `physical` | `number` | Yes | 0〜5、0.5 刻み |
+| `mental` | `number` | Yes | 0〜5、0.5 刻み |
 | `comment` | `string` | No | 最大 200 文字 |
 
 ### Zod スキーマ
 
 ```ts
+// 0, 0.5, 1.0, ... , 5.0 の 11 段階
 const scoreSchema = z
   .number()
-  .int()
   .min(0)
-  .max(100);
+  .max(5)
+  .multipleOf(0.5);
 
 export const createRecordSchema = z.object({
   physical: scoreSchema,
@@ -113,7 +114,7 @@ export const createRecordSchema = z.object({
     "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
     "date": "2025-04-03",
     "physical": 3.5,
-    "mental": 4.0,
+    "mental": 4,
     "comment": "今日は調子が良い",
     "createdAt": "2025-04-03T08:00:00.000Z",
     "updatedAt": "2025-04-03T08:00:00.000Z"
@@ -145,8 +146,8 @@ export const createRecordSchema = z.object({
   "data": {
     "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
     "date": "2025-04-03",
-    "physical": 70,
-    "mental": 80,
+    "physical": 3.5,
+    "mental": 4,
     "comment": "今日は調子が良い",
     "createdAt": "2025-04-03T08:00:00.000Z",
     "updatedAt": "2025-04-03T08:00:00.000Z"
@@ -175,15 +176,15 @@ export const createRecordSchema = z.object({
 
 ```json
 {
-  "physical": 4.0,
+  "physical": 4,
   "comment": "修正：実は調子が良かった"
 }
 ```
 
 | フィールド | 型 | 必須 | バリデーション |
 | --- | --- | --- | --- |
-| `physical` | `number` | No | 0〜100 の整数 |
-| `mental` | `number` | No | 0〜100 の整数 |
+| `physical` | `number` | No | 0〜5、0.5 刻み |
+| `mental` | `number` | No | 0〜5、0.5 刻み |
 | `comment` | `string \| null` | No | 最大 200 文字（`null` でクリア） |
 
 ### Zod スキーマ
@@ -203,8 +204,8 @@ export const updateRecordSchema = z.object({
   "data": {
     "id": "clxxxxxxxxxxxxxxxxxxxxxxxxx",
     "date": "2025-04-03",
-    "physical": 80,
-    "mental": 80,
+    "physical": 4,
+    "mental": 4,
     "comment": "修正：実は調子が良かった",
     "createdAt": "2025-04-03T08:00:00.000Z",
     "updatedAt": "2025-04-03T08:30:00.000Z"
@@ -253,8 +254,8 @@ v2 で朝・夜の記録区別を導入する際の変更点。
 
 ```json
 {
-  "physical": 70,
-  "mental": 80,
+  "physical": 3.5,
+  "mental": 4,
   "comment": "朝の記録",
   "timeOfDay": "morning"
 }
@@ -275,8 +276,8 @@ v2 で朝・夜の記録区別を導入する際の変更点。
       "id": "...",
       "date": "2025-04-03",
       "timeOfDay": "morning",
-      "physical": 70,
-      "mental": 80,
+      "physical": 3.5,
+      "mental": 4,
       "comment": null,
       "createdAt": "...",
       "updatedAt": "..."
@@ -285,8 +286,8 @@ v2 で朝・夜の記録区別を導入する際の変更点。
       "id": "...",
       "date": "2025-04-03",
       "timeOfDay": "evening",
-      "physical": 40,
-      "mental": 60,
+      "physical": 2,
+      "mental": 3,
       "comment": "疲れた",
       "createdAt": "...",
       "updatedAt": "..."
