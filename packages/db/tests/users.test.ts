@@ -43,17 +43,18 @@ test.each([
 	).rejects.toThrow();
 });
 
-test.each(["user", "a".repeat(32), "snake_case_1"])(
-	"login_id %s は受け入れられる",
-	async (loginId) => {
-		const [inserted] = await ctx.db
-			.insert(users)
-			.values({ loginId, passwordHash: "a" })
-			.returning();
+test.each([
+	"user",
+	"a".repeat(32),
+	"snake_case_1",
+])("login_id %s は受け入れられる", async (loginId) => {
+	const [inserted] = await ctx.db
+		.insert(users)
+		.values({ loginId, passwordHash: "a" })
+		.returning();
 
-		expect(inserted?.loginId).toBe(loginId);
-	},
-);
+	expect(inserted?.loginId).toBe(loginId);
+});
 
 test("login_id で検索できる", async () => {
 	await ctx.db.insert(users).values({ loginId: "findme", passwordHash: "a" });

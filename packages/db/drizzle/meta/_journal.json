@@ -15,6 +15,13 @@
       "when": 1788694728332,
       "tag": "0001_vengeful_retro_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788694980092,
+      "tag": "0002_condemned_bruce_banner",
+      "breakpoints": true
     }
   ]
 }
