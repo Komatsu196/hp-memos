@@ -59,7 +59,7 @@ PGlite が想定どおり動かない場合の代替は Docker Compose の Postg
   - `createTestDb(): Promise<{ db: PgliteDatabase<typeof schema>; close: () => Promise<void> }>` — Task 2 以降の全テストが使う
   - npm スクリプト `db:generate`（`drizzle-kit generate`）、`test`、`check-types`、`lint`、`format`
 
-- [ ] **Step 1: パッケージディレクトリと `package.json` を作る**
+- [x] **Step 1: パッケージディレクトリと `package.json` を作る**
 
 ```bash
 mkdir -p packages/db/src/schema packages/db/tests/helpers
@@ -89,7 +89,7 @@ mkdir -p packages/db/src/schema packages/db/tests/helpers
 }
 ```
 
-- [ ] **Step 2: 依存をインストールする**
+- [x] **Step 2: 依存をインストールする**
 
 バージョンは固定せず、インストール時点の最新を解決させる。
 
@@ -101,7 +101,7 @@ pnpm --filter @repo/db add drizzle-orm postgres @paralleldrive/cuid2
 pnpm --filter @repo/db add -D drizzle-kit @electric-sql/pglite vitest typescript @types/node @repo/typescript-config@workspace:* @biomejs/biome
 ```
 
-- [ ] **Step 3: 設定ファイルを 4 つ作る**
+- [x] **Step 3: 設定ファイルを 4 つ作る**
 
 `packages/db/tsconfig.json`:
 
@@ -157,7 +157,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: 空のスキーマ re-export を置く**
+- [x] **Step 4: 空のスキーマ re-export を置く**
 
 `packages/db/src/schema/index.ts`:
 
@@ -166,7 +166,7 @@ export default defineConfig({
 export {};
 ```
 
-- [ ] **Step 5: テストヘルパーを書く**
+- [x] **Step 5: テストヘルパーを書く**
 
 `packages/db/tests/helpers/test-db.ts`:
 
@@ -194,7 +194,7 @@ export async function createTestDb() {
 }
 ```
 
-- [ ] **Step 6: スモークテストを書く**
+- [x] **Step 6: スモークテストを書く**
 
 マイグレーションがまだ 1 本もないため、ここでは `createTestDb` を使わず PGlite 単体の起動だけを確かめる。
 
@@ -239,7 +239,7 @@ test("PGlite は PostgreSQL の numeric と CHECK 制約を備えている", asy
 
 2 本目のテストは、この計画が前提にしている「PGlite = 本物の PostgreSQL」を明示的に確かめるためのもの。ここが落ちるなら Docker Compose の PostgreSQL に切り替える判断を、後続タスクに入る前に下せる。
 
-- [ ] **Step 7: テストを実行して通ることを確認する**
+- [x] **Step 7: テストを実行して通ることを確認する**
 
 ```bash
 pnpm --filter @repo/db test
@@ -247,7 +247,7 @@ pnpm --filter @repo/db test
 
 Expected: 2 tests passed
 
-- [ ] **Step 8: 環境変数のテンプレートと ignore 設定を足す**
+- [x] **Step 8: 環境変数のテンプレートと ignore 設定を足す**
 
 `.env.example`（リポジトリルート）:
 
@@ -263,7 +263,7 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/hp_memos
 packages/db/.drizzle-tmp/
 ```
 
-- [ ] **Step 9: 型チェックと Lint を通す**
+- [x] **Step 9: 型チェックと Lint を通す**
 
 ```bash
 pnpm --filter @repo/db check-types && pnpm --filter @repo/db lint
@@ -271,7 +271,7 @@ pnpm --filter @repo/db check-types && pnpm --filter @repo/db lint
 
 Expected: どちらもエラーなし
 
-- [ ] **Step 10: コミット**
+- [x] **Step 10: コミット**
 
 ```bash
 git add packages/db .env.example .gitignore pnpm-lock.yaml
@@ -292,7 +292,7 @@ git commit -m "feat(db): packages/db の雛形と PGlite テスト基盤を追�
 - Consumes: `createTestDb()`（Task 1）
 - Produces: `users` — Drizzle テーブル。列 `id` / `loginId` / `passwordHash` / `createdAt` / `updatedAt`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `packages/db/tests/users.test.ts`:
 
@@ -363,7 +363,7 @@ test("login_id で検索できる", async () => {
 });
 ```
 
-- [ ] **Step 2: テストを実行して失敗することを確認する**
+- [x] **Step 2: テストを実行して失敗することを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/users.test.ts
@@ -372,7 +372,7 @@ pnpm --filter @repo/db test tests/users.test.ts
 Expected: FAIL。`drizzle/` にマイグレーションが 1 本もないため `migrate()` が失敗する。
 （`users` も未エクスポートだが、先に `migrate()` で落ちる）
 
-- [ ] **Step 3: スキーマを書く**
+- [x] **Step 3: スキーマを書く**
 
 `packages/db/src/schema/users.ts`:
 
@@ -409,7 +409,7 @@ export const users = pgTable(
 export * from "./users";
 ```
 
-- [ ] **Step 4: マイグレーションを生成する**
+- [x] **Step 4: マイグレーションを生成する**
 
 ```bash
 pnpm --filter @repo/db db:generate
@@ -417,7 +417,7 @@ pnpm --filter @repo/db db:generate
 
 Expected: `packages/db/drizzle/0000_*.sql` と `packages/db/drizzle/meta/` が生成される
 
-- [ ] **Step 5: 生成された SQL を目視で確認する**
+- [x] **Step 5: 生成された SQL を目視で確認する**
 
 ```bash
 cat packages/db/drizzle/0000_*.sql
@@ -425,7 +425,7 @@ cat packages/db/drizzle/0000_*.sql
 
 `create table "users"`、`unique`、`CONSTRAINT "chk_users_login_id" CHECK (...)` が含まれていること。CHECK が出ていない場合は Step 3 の `check()` の書き方を見直す。
 
-- [ ] **Step 6: テストを実行して通ることを確認する**
+- [x] **Step 6: テストを実行して通ることを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/users.test.ts
@@ -433,7 +433,7 @@ pnpm --filter @repo/db test tests/users.test.ts
 
 Expected: 8 tests passed
 
-- [ ] **Step 7: コミット**
+- [x] **Step 7: コミット**
 
 ```bash
 git add packages/db
@@ -453,7 +453,7 @@ git commit -m "feat(db): users テーブルを追加"
 - Consumes: `users`（Task 2）、`createTestDb()`（Task 1）
 - Produces: `sessions` — 列 `id` / `userId` / `expiresAt` / `createdAt`。`id` は呼び出し側が生成して渡す（既定値なし）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `packages/db/tests/sessions.test.ts`:
 
@@ -520,7 +520,7 @@ test("ユーザーを削除するとセッションも連鎖削除される", as
 });
 ```
 
-- [ ] **Step 2: テストを実行して失敗することを確認する**
+- [x] **Step 2: テストを実行して失敗することを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/sessions.test.ts
@@ -528,7 +528,7 @@ pnpm --filter @repo/db test tests/sessions.test.ts
 
 Expected: FAIL。`sessions` が未エクスポート。
 
-- [ ] **Step 3: スキーマを書く**
+- [x] **Step 3: スキーマを書く**
 
 `packages/db/src/schema/sessions.ts`:
 
@@ -563,13 +563,13 @@ export * from "./users";
 export * from "./sessions";
 ```
 
-- [ ] **Step 4: マイグレーションを生成する**
+- [x] **Step 4: マイグレーションを生成する**
 
 ```bash
 pnpm --filter @repo/db db:generate
 ```
 
-- [ ] **Step 5: テストを実行して通ることを確認する**
+- [x] **Step 5: テストを実行して通ることを確認する**
 
 ```bash
 pnpm --filter @repo/db test
@@ -577,7 +577,7 @@ pnpm --filter @repo/db test
 
 Expected: 全ファイルが pass（smoke 2 + users 8 + sessions 3）
 
-- [ ] **Step 6: コミット**
+- [x] **Step 6: コミット**
 
 ```bash
 git add packages/db
@@ -602,7 +602,7 @@ git commit -m "feat(db): sessions テーブルを追加"
 - Consumes: `users`（Task 2）、`createTestDb()`（Task 1）
 - Produces: `records` — 列 `id` / `userId` / `date`（`string`、`YYYY-MM-DD`）/ `timeOfDay`（`"morning" | "evening"`）/ `physical`（`number`）/ `mental`（`number`）/ `comment`（`string | null`）/ `createdAt` / `updatedAt`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `packages/db/tests/records.test.ts`:
 
@@ -805,7 +805,7 @@ test("ユーザーと日付で絞り込める", async () => {
 });
 ```
 
-- [ ] **Step 2: テストを実行して失敗することを確認する**
+- [x] **Step 2: テストを実行して失敗することを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/records.test.ts
@@ -813,7 +813,7 @@ pnpm --filter @repo/db test tests/records.test.ts
 
 Expected: FAIL。`records` が未エクスポート。
 
-- [ ] **Step 3: スキーマを書く**
+- [x] **Step 3: スキーマを書く**
 
 `packages/db/src/schema/records.ts`:
 
@@ -893,7 +893,7 @@ export * from "./sessions";
 export * from "./records";
 ```
 
-- [ ] **Step 4: マイグレーションを生成してテストを通す**
+- [x] **Step 4: マイグレーションを生成してテストを通す**
 
 ```bash
 pnpm --filter @repo/db db:generate && pnpm --filter @repo/db test tests/records.test.ts
@@ -901,7 +901,7 @@ pnpm --filter @repo/db db:generate && pnpm --filter @repo/db test tests/records.
 
 Expected: 全て pass
 
-- [ ] **Step 5: `db/records.mdx` を v1 仕様に書き換える**
+- [x] **Step 5: `db/records.mdx` を v1 仕様に書き換える**
 
 `apps/docs/content/docs/design/db/records.mdx` を次のとおり直す。
 
@@ -912,7 +912,7 @@ Expected: 全て pass
 5. **「MVP v2 マイグレーション」節をまるごと削除する。** `time_of_day` が v1 に入ったため、この移行は発生しない。
 6. 「スケール」節はそのまま残す（変更なし）。
 
-- [ ] **Step 6: `functional.mdx` をスコープ変更に合わせる**
+- [x] **Step 6: `functional.mdx` をスコープ変更に合わせる**
 
 `apps/docs/content/docs/requirements/functional.mdx` を次のとおり直す。
 
@@ -942,7 +942,7 @@ Expected: 全て pass
 
 5. 末尾の「画面一覧」の表を削除し、[画面設計](/docs/design/screens) へのリンクに置き換える。二重管理を避けるため、画面一覧の正は `design/screens/index.mdx` 側とする。
 
-- [ ] **Step 7: `concept.mdx` の MVP 区分を更新する**
+- [x] **Step 7: `concept.mdx` の MVP 区分を更新する**
 
 `apps/docs/content/docs/overview/concept.mdx` の「MVP」節を直す。
 
@@ -950,7 +950,7 @@ Expected: 全て pass
 2. **MVP v2** の項目（朝・夜の区別、回復量の表示、UI 改善）は v1 に吸収されたため、節ごと削除する。
 3. **MVP v3** の「AI コメント機能」を **MVP v2** に繰り上げる。
 
-- [ ] **Step 8: docs の型チェックを通す**
+- [x] **Step 8: docs の型チェックを通す**
 
 ```bash
 pnpm --filter docs check-types
@@ -958,7 +958,7 @@ pnpm --filter docs check-types
 
 Expected: `✓ Types generated successfully`。MDX の記法崩れやリンク切れがあればここで落ちる。
 
-- [ ] **Step 9: コミット**
+- [x] **Step 9: コミット**
 
 スキーマとドキュメントは同じ決定の表と裏なので 1 コミットにまとめる。
 
@@ -982,7 +982,7 @@ git commit -m "feat(db): records テーブルを追加し朝夜の区別を v1 �
 
 WebAuthn の実装自体は別計画（パスキー）で行う。ここではテーブルだけ用意する。`packages/db` を 1 回で完成させ、後続計画がスキーマ変更なしで進められるようにするため。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `packages/db/tests/credentials.test.ts`:
 
@@ -1076,7 +1076,7 @@ test("ユーザーを削除するとパスキーも連鎖削除される", async
 });
 ```
 
-- [ ] **Step 2: テストを実行して失敗することを確認する**
+- [x] **Step 2: テストを実行して失敗することを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/credentials.test.ts
@@ -1084,7 +1084,7 @@ pnpm --filter @repo/db test tests/credentials.test.ts
 
 Expected: FAIL。`credentials` が未エクスポート。
 
-- [ ] **Step 3: スキーマを書く**
+- [x] **Step 3: スキーマを書く**
 
 `packages/db/src/schema/credentials.ts`:
 
@@ -1139,7 +1139,7 @@ export * from "./records";
 export * from "./credentials";
 ```
 
-- [ ] **Step 4: マイグレーションを生成してテストを通す**
+- [x] **Step 4: マイグレーションを生成してテストを通す**
 
 ```bash
 pnpm --filter @repo/db db:generate && pnpm --filter @repo/db test
@@ -1149,7 +1149,7 @@ Expected: 全ファイル pass
 
 `bytea` の往復テストが落ちる場合、PGlite が返す値が `Uint8Array` ではなく Node の `Buffer` である可能性がある。`Buffer` は `Uint8Array` のサブクラスなので `Array.from()` を通した比較は成立するはずだが、成立しない場合は `customType` に `fromDriver` を足して変換する。
 
-- [ ] **Step 5: コミット**
+- [x] **Step 5: コミット**
 
 ```bash
 git add packages/db
@@ -1175,7 +1175,7 @@ git commit -m "feat(db): credentials テーブルを追加"
   - `type Database` — `apps/web` の infrastructure 層が引数の型として使う
   - `@repo/db` から `getDb` / `createDb` / `Database`、`@repo/db/schema` から全テーブル
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 接続そのものは実 DB がないと試せないため、ここで検証するのは「未設定の環境変数で落ちること」と「型が期待どおりであること」に絞る。
 
@@ -1198,7 +1198,7 @@ test("接続文字列を渡すとクエリビルダを備えたインスタン�
 });
 ```
 
-- [ ] **Step 2: テストを実行して失敗することを確認する**
+- [x] **Step 2: テストを実行して失敗することを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/client.test.ts
@@ -1206,7 +1206,7 @@ pnpm --filter @repo/db test tests/client.test.ts
 
 Expected: FAIL。`../src/client` が存在しない。
 
-- [ ] **Step 3: クライアントを書く**
+- [x] **Step 3: クライアントを書く**
 
 `packages/db/src/client.ts`:
 
@@ -1248,7 +1248,7 @@ export function getDb(): Database {
 }
 ```
 
-- [ ] **Step 4: パッケージのエントリポイントを書く**
+- [x] **Step 4: パッケージのエントリポイントを書く**
 
 `packages/db/src/index.ts`:
 
@@ -1257,7 +1257,7 @@ export { createDb, getDb, type Database } from "./client";
 export * from "./schema";
 ```
 
-- [ ] **Step 5: テストを実行して通ることを確認する**
+- [x] **Step 5: テストを実行して通ることを確認する**
 
 ```bash
 pnpm --filter @repo/db test
@@ -1265,7 +1265,7 @@ pnpm --filter @repo/db test
 
 Expected: 全ファイル pass
 
-- [ ] **Step 6: 型チェックと Lint を通す**
+- [x] **Step 6: 型チェックと Lint を通す**
 
 ```bash
 pnpm --filter @repo/db check-types && pnpm --filter @repo/db lint
@@ -1273,7 +1273,7 @@ pnpm --filter @repo/db check-types && pnpm --filter @repo/db lint
 
 Expected: どちらもエラーなし
 
-- [ ] **Step 7: コミット**
+- [x] **Step 7: コミット**
 
 ```bash
 git add packages/db
@@ -1295,7 +1295,7 @@ git commit -m "feat(db): Drizzle クライアントとパッケージのエク�
 - Consumes: `Database`（Task 6）、全テーブル（Task 2〜5）
 - Produces: `seedDatabase(db: Database, options?: { days?: number }): Promise<{ userId: string; recordCount: number }>`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `packages/db/tests/seed.test.ts`:
 
@@ -1361,7 +1361,7 @@ test("二度実行しても失敗しない", async () => {
 });
 ```
 
-- [ ] **Step 2: テストを実行して失敗することを確認する**
+- [x] **Step 2: テストを実行して失敗することを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/seed.test.ts
@@ -1369,7 +1369,7 @@ pnpm --filter @repo/db test tests/seed.test.ts
 
 Expected: FAIL。`../src/seed` が存在しない。
 
-- [ ] **Step 3: シードを書く**
+- [x] **Step 3: シードを書く**
 
 パスワードのハッシュ化は認証の計画で導入するため、ここでは固定のプレースホルダを入れる。シードユーザーでログインできる必要はまだない。
 
@@ -1470,7 +1470,7 @@ export async function seedDatabase(
 }
 ```
 
-- [ ] **Step 4: テストを実行して通ることを確認する**
+- [x] **Step 4: テストを実行して通ることを確認する**
 
 ```bash
 pnpm --filter @repo/db test tests/seed.test.ts
@@ -1478,7 +1478,7 @@ pnpm --filter @repo/db test tests/seed.test.ts
 
 Expected: 4 tests passed
 
-- [ ] **Step 5: 実 DB に流すための CLI エントリを足す**
+- [x] **Step 5: 実 DB に流すための CLI エントリを足す**
 
 `packages/db/package.json` の `scripts` に追記する:
 
@@ -1507,7 +1507,7 @@ console.log(`シード完了: user=${result.userId} records=${result.recordCount
 process.exit(0);
 ```
 
-- [ ] **Step 6: 全体を通す**
+- [x] **Step 6: 全体を通す**
 
 ```bash
 pnpm --filter @repo/db test && pnpm --filter @repo/db check-types && pnpm --filter @repo/db lint
@@ -1515,7 +1515,7 @@ pnpm --filter @repo/db test && pnpm --filter @repo/db check-types && pnpm --filt
 
 Expected: 全て pass
 
-- [ ] **Step 7: コミット**
+- [x] **Step 7: コミット**
 
 ```bash
 git add packages/db
@@ -1537,7 +1537,7 @@ git commit -m "feat(db): 開発用シードデータを追加"
 - Consumes: Task 1〜7 の成果すべて
 - Produces: ルートから `pnpm test` / `pnpm check-types` / `pnpm lint` が `@repo/db` を含めて通る状態
 
-- [ ] **Step 1: `turbo.json` に DB タスクを足す**
+- [x] **Step 1: `turbo.json` に DB タスクを足す**
 
 `tasks` に追加する:
 
@@ -1555,7 +1555,7 @@ git commit -m "feat(db): 開発用シードデータを追加"
 
 `test` タスクの `"dependsOn": ["^build"]` はそのままでよい。`@repo/db` に `build` はないため素通りする。
 
-- [ ] **Step 2: ルートから全タスクを実行する**
+- [x] **Step 2: ルートから全タスクを実行する**
 
 ```bash
 pnpm test && pnpm check-types && pnpm lint
@@ -1563,7 +1563,7 @@ pnpm test && pnpm check-types && pnpm lint
 
 Expected: `@repo/db`・`web`・`docs`・`@repo/ui` のいずれもエラーなし。`web` はテストファイルが 0 件のため vitest が「no test files」で終了するが、これは既存の状態であり、この計画では変更しない。
 
-- [ ] **Step 3: `monorepo-structure.mdx` の「今後追加予定のディレクトリ」を更新する**
+- [x] **Step 3: `monorepo-structure.mdx` の「今後追加予定のディレクトリ」を更新する**
 
 `apps/docs/content/docs/architecture/monorepo-structure.mdx` の `apps/web/src/routes/` の想定ツリーが旧画面設計（`dashboard.tsx` / `records/new.tsx` / `records/$recordId.tsx` / `graph.tsx`）のままになっている。[画面設計](/docs/design/screens)で確定したルートに差し替える。
 
@@ -1588,13 +1588,13 @@ import { getDb } from "@repo/db";
 import { users, records } from "@repo/db/schema";
 ```
 
-- [ ] **Step 4: 画面設計の「既存ドキュメントとの差分」表から、消化した行を削除する**
+- [x] **Step 4: 画面設計の「既存ドキュメントとの差分」表から、消化した行を削除する**
 
 `apps/docs/content/docs/design/screens/index.mdx` 末尾の表から、この計画で対応した 4 行（`functional.mdx` の 2 行、`db/records.mdx`、`concept.mdx`）を削除する。残るのは `api/records.mdx` の 1 行のみで、これは記録 API の計画で消化する。
 
 表が 1 行だけになるため、見出しの文言を「実装前にこれらを更新する必要がある」から「以下は未反映であり、対応する計画の中で更新する」に直す。
 
-- [ ] **Step 5: docs の型チェックを通す**
+- [x] **Step 5: docs の型チェックを通す**
 
 ```bash
 pnpm --filter docs check-types
@@ -1602,7 +1602,7 @@ pnpm --filter docs check-types
 
 Expected: `✓ Types generated successfully`
 
-- [ ] **Step 6: コミット**
+- [x] **Step 6: コミット**
 
 ```bash
 git add turbo.json apps/docs/content/docs
@@ -1613,11 +1613,12 @@ git commit -m "chore(db): packages/db を Turborepo に組み込みドキュメ�
 
 ## 完了条件
 
-- [ ] `pnpm test` がルートから通り、`@repo/db` の全テストが pass する
-- [ ] `pnpm check-types` と `pnpm lint` がルートから通る
-- [ ] `packages/db/drizzle/` に 4 テーブル分のマイグレーション SQL が生成されている
-- [ ] `apps/web` から `import { getDb } from "@repo/db"` と `import { records } from "@repo/db/schema"` が型解決できる
-- [ ] `design/screens/index.mdx` の差分表に残っているのは `api/records.mdx` の 1 行のみ
+- [x] `pnpm test` がルートから通り、`@repo/db` の全テストが pass する（44 tests）
+- [x] `pnpm check-types` がルートから通る
+- [ ] `pnpm lint` がルートから通る — **未達**。`@repo/db` は lint / check ともクリーンだが、この計画の着手前から `packages/ui`（パッケージ直下に ignore ファイルがなく Biome が起動できない）・`apps/docs`（fumadocs テンプレート 2 ファイルが未整形）・`apps/web`（`__root.tsx` のテーマ初期化スクリプトが `noDangerouslySetInnerHtml` に抵触）の 3 件が失敗している。いずれもこの計画が触れたファイルではないため、別の変更として扱う
+- [x] `packages/db/drizzle/` に 4 テーブル分のマイグレーション SQL が生成されている
+- [x] `apps/web` から `import { getDb } from "@repo/db"` と `import { records } from "@repo/db/schema"` が型解決できる
+- [x] `design/screens/index.mdx` の差分表に残っているのは `api/records.mdx` の 1 行のみ
 
 ## この計画で扱わないこと
 
