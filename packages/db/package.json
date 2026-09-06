@@ -10,6 +10,7 @@
 	"scripts": {
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
+		"db:seed": "tsx src/seed-cli.ts",
 		"test": "vitest run",
 		"check-types": "tsc --noEmit",
 		"lint": "biome lint",
@@ -27,6 +28,7 @@
 		"@repo/typescript-config": "workspace:^",
 		"@types/node": "^26.4.1",
 		"drizzle-kit": "^0.31.10",
+		"tsx": "^4.23.13",
 		"typescript": "^7.0.2",
 		"vitest": "^3.0.5"
 	}
