@@ -43,3 +43,6 @@ yarn-error.log*
 # Claude Code（環境固有・ローカル）
 .claude/launch.json
 .claude/worktrees/
+
+# Drizzle
+packages/db/.drizzle-tmp/

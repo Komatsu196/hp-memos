@@ -1,0 +1,33 @@
+{
+	"name": "@repo/db",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./schema": "./src/schema/index.ts"
+	},
+	"scripts": {
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"test": "vitest run",
+		"check-types": "tsc --noEmit",
+		"lint": "biome lint",
+		"format": "biome format --write",
+		"check": "biome check"
+	},
+	"dependencies": {
+		"@paralleldrive/cuid2": "^3.3.0",
+		"drizzle-orm": "^0.45.2",
+		"postgres": "^3.4.9"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.9",
+		"@electric-sql/pglite": "^0.5.8",
+		"@repo/typescript-config": "workspace:^",
+		"@types/node": "^26.4.1",
+		"drizzle-kit": "^0.31.10",
+		"typescript": "^7.0.2",
+		"vitest": "^3.0.5"
+	}
+}
