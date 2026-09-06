@@ -9,13 +9,14 @@
 		"dev": "vite dev --port 3000",
 		"build": "vite build",
 		"preview": "vite preview",
-		"test": "vitest run",
+		"test": "vitest run --passWithNoTests",
 		"format": "biome format --write",
 		"check-types": "tsc --noEmit",
 		"lint": "biome lint",
 		"check": "biome check"
 	},
 	"dependencies": {
+		"@repo/db": "workspace:^",
 		"@tailwindcss/vite": "^4.1.18",
 		"@tanstack/react-devtools": "latest",
 		"@tanstack/react-router": "latest",
