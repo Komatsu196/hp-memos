@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788694681076,
+      "tag": "0000_long_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788694728332,
+      "tag": "0001_vengeful_retro_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788694980092,
+      "tag": "0002_condemned_bruce_banner",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788695056957,
+      "tag": "0003_large_agent_zero",
+      "breakpoints": true
+    }
+  ]
+}

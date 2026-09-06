@@ -1,0 +1,14 @@
+{
+	"extends": "@repo/typescript-config/base.json",
+	"compilerOptions": {
+		// バンドラ経由（Vite / Vitest / drizzle-kit）でしか読まれないパッケージなので、
+		// 共有プリセットの NodeNext を上書きして拡張子なしの相対 import を許す
+		"module": "Preserve",
+		"moduleResolution": "Bundler",
+		"outDir": "dist",
+		"noEmit": true,
+		"types": ["node"]
+	},
+	"include": ["src", "tests", "drizzle.config.ts", "vitest.config.ts"],
+	"exclude": ["node_modules", "dist"]
+}

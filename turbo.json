@@ -16,6 +16,15 @@
     "test": {
       "dependsOn": ["^build"]
     },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:seed": {
+      "cache": false
+    },
     "format": {
       "cache": false
     },

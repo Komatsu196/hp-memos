@@ -12,6 +12,7 @@ description: コンディション記録
 | `id` | `text` | PK | CUID2 で生成 |
 | `user_id` | `text` | FK → `users.id`, NOT NULL | 記録の所有者 |
 | `date` | `date` | NOT NULL | 記録日 |
+| `time_of_day` | `text` | NOT NULL | `'morning'` / `'evening'` |
 | `physical` | `numeric(2,1)` | NOT NULL | 体力（0〜5、0.5 刻み） |
 | `mental` | `numeric(2,1)` | NOT NULL | 気力（0〜5、0.5 刻み） |
 | `comment` | `varchar(200)` | NULL | 一言コメント |
@@ -26,6 +27,7 @@ description: コンディション記録
 
 ## CHECK 制約
 
+- `time_of_day IN ('morning', 'evening')`
 - `physical >= 0 AND physical <= 5 AND mod(physical * 10, 5) = 0`
 - `mental >= 0 AND mental <= 5 AND mod(mental * 10, 5) = 0`
 
@@ -43,7 +45,7 @@ Drizzle の `numeric` は既定で JS の `string` を返すため、`mode: "num
 
 ## ユニーク制約
 
-- `uq_records_user_date` ON (`user_id`, `date`) — 1 日 1 件を保証
+- `uq_records_user_date_tod` ON (`user_id`, `date`, `time_of_day`) — 1 日あたり朝 1 件・夜 1 件を保証
 
 ## インデックス
 
@@ -54,20 +56,23 @@ Drizzle の `numeric` は既定で JS の `string` を返すため、`mode: "num
 ## Drizzle スキーマ
 
 ```ts
+import { createId } from "@paralleldrive/cuid2";
+import { sql } from "drizzle-orm";
 import {
+  check,
+  date,
+  index,
+  numeric,
   pgTable,
   text,
-  date,
-  numeric,
-  varchar,
   timestamp,
-  index,
   unique,
-  check,
+  varchar,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
-import { createId } from "@paralleldrive/cuid2";
 import { users } from "./users";
+
+export const TIME_OF_DAY = ["morning", "evening"] as const;
+export type TimeOfDay = (typeof TIME_OF_DAY)[number];
 
 export const records = pgTable(
   "records",
@@ -79,6 +84,7 @@ export const records = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     date: date("date", { mode: "string" }).notNull(),
+    timeOfDay: text("time_of_day").$type<TimeOfDay>().notNull(),
     physical: numeric("physical", {
       precision: 2,
       scale: 1,
@@ -99,45 +105,24 @@ export const records = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
-    unique("uq_records_user_date").on(table.userId, table.date),
+    unique("uq_records_user_date_tod").on(
+      table.userId,
+      table.date,
+      table.timeOfDay,
+    ),
     index("idx_records_user_id_date").on(table.userId, sql`${table.date} DESC`),
     check(
-      "chk_physical_range",
+      "chk_records_time_of_day",
+      sql`${table.timeOfDay} in ('morning', 'evening')`,
+    ),
+    check(
+      "chk_records_physical",
       sql`${table.physical} >= 0 AND ${table.physical} <= 5 AND mod(${table.physical} * 10, 5) = 0`,
     ),
     check(
-      "chk_mental_range",
+      "chk_records_mental",
       sql`${table.mental} >= 0 AND ${table.mental} <= 5 AND mod(${table.mental} * 10, 5) = 0`,
     ),
   ],
 );
 ```
-
-## MVP v2 マイグレーション
-
-v2 で「朝・夜の記録区別」を導入する際、`time_of_day` カラムを追加する。
-
-### 変更内容
-
-| 変更 | 内容 |
-| --- | --- |
-| カラム追加 | `time_of_day text` — `'morning'` / `'evening'` |
-| 既存データ | 既存レコードに `time_of_day = NULL` をセット（v1 の「終日記録」） |
-| ユニーク制約変更 | `(user_id, date)` → `(user_id, date, time_of_day)` |
-| CHECK 追加 | `time_of_day IN ('morning', 'evening') OR time_of_day IS NULL` |
-
-### マイグレーション SQL（参考）
-
-```sql
-ALTER TABLE records ADD COLUMN time_of_day text;
-
-ALTER TABLE records DROP CONSTRAINT uq_records_user_date;
-
-CREATE UNIQUE INDEX uq_records_user_date_tod
-  ON records (user_id, date, COALESCE(time_of_day, '__none__'));
-
-ALTER TABLE records ADD CONSTRAINT chk_time_of_day
-  CHECK (time_of_day IS NULL OR time_of_day IN ('morning', 'evening'));
-```
-
-`COALESCE` を使ったユニークインデックスにより、v1 の `NULL`（終日記録）と v2 の `'morning'` / `'evening'` が共存できる。
