@@ -36,3 +36,10 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Superpowers brainstorm (visual companion)
+.superpowers
+
+# Claude Code（環境固有・ローカル）
+.claude/launch.json
+.claude/worktrees/
