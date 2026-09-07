@@ -19,6 +19,7 @@
 	},
 	"dependencies": {
 		"@paralleldrive/cuid2": "^3.3.0",
+		"dayjs": "^1.11.23",
 		"drizzle-orm": "^0.45.2",
 		"postgres": "^3.4.9"
 	},

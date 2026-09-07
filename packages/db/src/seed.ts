@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { type ExtractTablesWithRelations, eq } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type * as schema from "./schema";
@@ -22,12 +23,6 @@ const SEED_PASSWORD_HASH = "seed-placeholder-not-a-valid-hash";
 /** 0〜5 の 0.5 刻みに丸める */
 function toScale(value: number): number {
 	return Math.min(5, Math.max(0, Math.round(value * 2) / 2));
-}
-
-function formatDate(date: Date): string {
-	const iso = date.toISOString().split("T")[0];
-	if (!iso) throw new Error("日付の整形に失敗した");
-	return iso;
 }
 
 export async function seedDatabase(
@@ -55,7 +50,9 @@ export async function seedDatabase(
 	await db.delete(records).where(eq(records.userId, userId));
 
 	const rows: (typeof records.$inferInsert)[] = [];
-	const today = new Date();
+	// dayjs はローカルの暦日で扱う。Date#toISOString() は UTC に寄せるため、
+	// UTC より東の環境では深夜に実行した記録が前日の日付になってしまう
+	const today = dayjs();
 
 	for (let i = days - 1; i >= 0; i--) {
 		// 7 日ごとに 1 日まるごと欠損させ、5 日ごとに夜だけ欠損させる。
@@ -63,9 +60,7 @@ export async function seedDatabase(
 		if (i % 7 === 3) continue;
 		const skipEvening = i % 5 === 1;
 
-		const day = new Date(today);
-		day.setDate(day.getDate() - i);
-		const date = formatDate(day);
+		const date = today.subtract(i, "day").format("YYYY-MM-DD");
 
 		// 朝は高め、夜は消耗して低め、という 1 日の形を作る
 		const morningBase = 3 + Math.sin(i / 3) * 1.2;
