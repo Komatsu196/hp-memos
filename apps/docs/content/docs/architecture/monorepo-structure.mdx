@@ -44,14 +44,21 @@ packages/db/
 ├── src/
 │   ├── index.ts          … DB 接続 & 全エクスポート
 │   ├── client.ts         … Drizzle クライアント生成
+│   ├── seed.ts           … 開発用シードデータ生成
+│   ├── seed-cli.ts       … db:seed の実行エントリ
 │   └── schema/
 │       ├── index.ts      … 全スキーマの re-export
 │       ├── users.ts      … users テーブル
 │       ├── sessions.ts   … sessions テーブル
 │       ├── records.ts    … records テーブル
 │       └── credentials.ts … WebAuthn credentials テーブル
+├── tests/                … PGlite 上でマイグレーションを適用して検証
+│   ├── helpers/
+│   │   └── test-db.ts    … インメモリ DB の起動とマイグレーション適用
+│   └── *.test.ts         … テーブルごとのテスト
 ├── drizzle/              … マイグレーションファイル（自動生成）
 ├── drizzle.config.ts     … Drizzle Kit 設定
+├── vitest.config.ts      … テスト設定
 ├── package.json
 └── tsconfig.json
 ```
@@ -79,7 +86,7 @@ export * from "./credentials";
 `apps/web` からは `@repo/db` として利用する。
 
 ```ts
-import { db } from "@repo/db";
+import { getDb } from "@repo/db";
 import { users, records } from "@repo/db/schema";
 ```
 
@@ -110,11 +117,9 @@ API は[クリーンアーキテクチャ](/docs/architecture/api-architecture)�
 apps/web/src/
 ├── routes/
 │   ├── _authed/              … 認証必須レイアウトグループ
-│   │   ├── dashboard.tsx     … ダッシュボード（一覧）
-│   │   ├── records/
-│   │   │   ├── new.tsx       … 記録入力
-│   │   │   └── $recordId.tsx … 記録編集
-│   │   ├── graph.tsx         … 推移グラフ
+│   │   ├── index.tsx         … 今日
+│   │   ├── history.tsx       … 履歴
+│   │   ├── records.$date.tsx … その日の記録
 │   │   └── settings.tsx      … 設定
 │   ├── login.tsx             … ログイン
 │   └── register.tsx          … アカウント登録
